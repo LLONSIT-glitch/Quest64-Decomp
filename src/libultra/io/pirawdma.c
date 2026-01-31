@@ -1,12 +1,11 @@
-#include "piint.h"
+#include "PRinternal/piint.h"
 #include "PR/ultraerror.h"
 
 // TODO: this comes from a header
 #ident "$Revision: 1.17 $"
 
-s32 __osEPiRawStartDma(OSPiHandle* pihandle, s32 direction, u32 devAddr, void* dramAddr, u32 size) {
-    u32 stat;
-    u32 domain;
+s32 __osPiRawStartDma(s32 direction, u32 devAddr, void* dramAddr, u32 size) {
+    register u32 stat;
 
 #ifdef _DEBUG
     if ((direction != OS_READ) && (direction != OS_WRITE)) {
@@ -19,7 +18,7 @@ s32 __osEPiRawStartDma(OSPiHandle* pihandle, s32 direction, u32 devAddr, void* d
         return -1;
     }
 
-    if ((u32) dramAddr & 0x7) {
+    if ((u32)dramAddr & 0x7) {
         __osError(ERR_OSPIRAWSTARTDMA_ADDR, 1, dramAddr);
         return -1;
     }
@@ -35,9 +34,10 @@ s32 __osEPiRawStartDma(OSPiHandle* pihandle, s32 direction, u32 devAddr, void* d
     }
 #endif
 
-    EPI_SYNC(pihandle, stat, domain);
+    WAIT_ON_IOBUSY(stat);
+
     IO_WRITE(PI_DRAM_ADDR_REG, osVirtualToPhysical(dramAddr));
-    IO_WRITE(PI_CART_ADDR_REG, K1_TO_PHYS(pihandle->baseAddress | devAddr));
+    IO_WRITE(PI_CART_ADDR_REG, K1_TO_PHYS((u32)osRomBase | devAddr));
 
     switch (direction) {
         case OS_READ:
