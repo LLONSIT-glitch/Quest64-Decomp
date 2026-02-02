@@ -12,6 +12,9 @@
 
 #include "guint.h"
 
+#undef FIX32TOF
+#define FIX32TOF(x) ((float)x / 65536.0f)
+
 void guMtxF2L(float mf[4][4], Mtx *m)
 {
 	int	i, j;

@@ -2,6 +2,7 @@
 #include "PR/rcp.h"
 #include "PR/assert.h"
 #include "../os/osint.h"
+#include "siint.h"
 
 // Adjust line numbers to match assert
 #if BUILD_VERSION < VERSION_J

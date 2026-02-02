@@ -282,8 +282,6 @@ s32 func_801000A8_DA6998(void)
 
 void func_801006D8_ovl_title(void)
 {
-    Gfx *temp_v0;
-    Gfx *temp_v0_2;
     s32 var_v0;
 
     gSPDisplayList(gMasterGfxPos++, D_80103138_ovl_title);
