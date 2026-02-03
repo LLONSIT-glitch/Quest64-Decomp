@@ -1,5 +1,5 @@
 /*====================================================================
- * sndpsetvol.c
+ * sndpsetpitch.c
  *
  * Copyright 1995, Silicon Graphics, Inc.
  * All Rights Reserved.
@@ -22,10 +22,16 @@
 #include <os_internal.h>
 #include <ultraerror.h>
 
-void alSndpSetVol(ALSndPlayer *sndp, s16 vol) 
+void alSndpSetPitch(ALSndPlayer *sndp, f32 pitch) 
 {
     ALSndpEvent evt;
     ALSoundState  *sState = sndp->sndState;
+
+    /*
+     * If this is set during playback there will be
+     * a the envelope lengths won't be accurate - but you can still
+     * do it. 
+     */
 
 #ifdef _DEBUG
     if ((sndp->target >= sndp->maxSounds) || (sndp->target < 0)){
@@ -34,9 +40,9 @@ void alSndpSetVol(ALSndPlayer *sndp, s16 vol)
     }
 #endif
 
-    evt.vol.type = AL_SNDP_VOL_EVT;
-    evt.vol.state = &sState[sndp->target];
-    evt.vol.vol = vol;
+    evt.pitch.type = AL_SNDP_PITCH_EVT;
+    evt.pitch.state = &sState[sndp->target];
+    evt.pitch.pitch = pitch;
     alEvtqPostEvent(&sndp->evtq, (ALEvent *)&evt, 0);
 }
 

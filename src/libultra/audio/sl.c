@@ -1,7 +1,10 @@
 /*====================================================================
- * sndpsetvol.c
+ * sl.c
  *
- * Copyright 1995, Silicon Graphics, Inc.
+ * Synopsis:
+ *  Sound library global routines
+ *
+ * Copyright 1993, Silicon Graphics, Inc.
  * All Rights Reserved.
  *
  * This is UNPUBLISHED PROPRIETARY SOURCE CODE of Silicon Graphics,
@@ -18,25 +21,45 @@
  * Copyright Laws of the United States.
  *====================================================================*/
 
-#include "sndp.h"
-#include <os_internal.h>
-#include <ultraerror.h>
+#include <libaudio.h>
 
-void alSndpSetVol(ALSndPlayer *sndp, s16 vol) 
+ALGlobals *alGlobals=0;
+
+void alInit(ALGlobals *g, ALSynConfig *c)
 {
-    ALSndpEvent evt;
-    ALSoundState  *sState = sndp->sndState;
-
-#ifdef _DEBUG
-    if ((sndp->target >= sndp->maxSounds) || (sndp->target < 0)){
-        __osError(ERR_ALSNDPSETPAR, 2, sndp->target, sndp->maxSounds-1);
-	return;
+    if (!alGlobals) { /* already initialized? */
+        alGlobals = g;
+        alSynNew(&alGlobals->drvr, c);
     }
-#endif
-
-    evt.vol.type = AL_SNDP_VOL_EVT;
-    evt.vol.state = &sState[sndp->target];
-    evt.vol.vol = vol;
-    alEvtqPostEvent(&sndp->evtq, (ALEvent *)&evt, 0);
 }
+
+void alClose(ALGlobals *glob)
+{
+    if (alGlobals) {
+        alSynDelete(&glob->drvr);
+        alGlobals = 0;
+    }
+}
+
+/* might want to make these macros */
+void alLink(ALLink *ln, ALLink *to)
+{					
+    ln->next = to->next;     
+    ln->prev = to;           
+    if (to->next)            
+        to->next->prev = ln; 
+    to->next = ln;           
+}
+
+void alUnlink(ALLink *ln)			
+{					
+    if (ln->next)                   
+        ln->next->prev = ln->prev;  
+    if (ln->prev)                   
+        ln->prev->next = ln->next;  
+}
+
+
+
+
 

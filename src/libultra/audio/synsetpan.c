@@ -1,5 +1,5 @@
 /*====================================================================
- * sndpsetvol.c
+ * synsetpan.c
  *
  * Copyright 1995, Silicon Graphics, Inc.
  * All Rights Reserved.
@@ -18,25 +18,33 @@
  * Copyright Laws of the United States.
  *====================================================================*/
 
-#include "sndp.h"
+#include "synthInternals.h"
 #include <os_internal.h>
 #include <ultraerror.h>
 
-void alSndpSetVol(ALSndPlayer *sndp, s16 vol) 
+void alSynSetPan(ALSynth *synth, ALVoice *v, u8 pan)
 {
-    ALSndpEvent evt;
-    ALSoundState  *sState = sndp->sndState;
+    ALParam  *update;
+    ALFilter *f;
 
-#ifdef _DEBUG
-    if ((sndp->target >= sndp->maxSounds) || (sndp->target < 0)){
-        __osError(ERR_ALSNDPSETPAR, 2, sndp->target, sndp->maxSounds-1);
-	return;
+    if (v->pvoice) {
+
+        /*
+         * get new update struct from the free list
+         */
+        update = __allocParam();
+        ALFailIf(update == 0, ERR_ALSYN_NO_UPDATE);
+
+        /*
+         * set offset and pan data
+         */
+        update->delta  = synth->paramSamples + v->pvoice->offset;
+        update->type   = AL_FILTER_SET_PAN;
+        update->data.i = pan;
+        update->next   = 0;
+
+        f = v->pvoice->channelKnob;
+        (*f->setParam)(f, AL_FILTER_ADD_UPDATE, update);        
     }
-#endif
-
-    evt.vol.type = AL_SNDP_VOL_EVT;
-    evt.vol.state = &sState[sndp->target];
-    evt.vol.vol = vol;
-    alEvtqPostEvent(&sndp->evtq, (ALEvent *)&evt, 0);
 }
 

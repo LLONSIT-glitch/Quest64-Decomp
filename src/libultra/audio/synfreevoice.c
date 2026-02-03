@@ -1,5 +1,5 @@
 /*====================================================================
- * sndpsetvol.c
+ * synfreevoice.c
  *
  * Copyright 1995, Silicon Graphics, Inc.
  * All Rights Reserved.
@@ -18,25 +18,37 @@
  * Copyright Laws of the United States.
  *====================================================================*/
 
-#include "sndp.h"
-#include <os_internal.h>
 #include <ultraerror.h>
+#include <os_internal.h>
+#include "synthInternals.h"
 
-void alSndpSetVol(ALSndPlayer *sndp, s16 vol) 
+#include <os.h>
+
+void alSynFreeVoice(ALSynth *drvr, ALVoice *voice)
 {
-    ALSndpEvent evt;
-    ALSoundState  *sState = sndp->sndState;
+    ALFilter *f;
+    ALFreeParam *update;
 
-#ifdef _DEBUG
-    if ((sndp->target >= sndp->maxSounds) || (sndp->target < 0)){
-        __osError(ERR_ALSNDPSETPAR, 2, sndp->target, sndp->maxSounds-1);
-	return;
+    if (voice->pvoice) {
+
+        if (voice->pvoice->offset) { /* if voice was stolen */
+            update = (ALFreeParam *)__allocParam();
+            ALFailIf(update == 0, ERR_ALSYN_NO_UPDATE);
+
+            /*
+             * set voice data
+             */
+            update->delta  = drvr->paramSamples + voice->pvoice->offset;
+            update->type   = AL_FILTER_FREE_VOICE;
+            update->pvoice = voice->pvoice;
+
+            f = voice->pvoice->channelKnob;
+            (*f->setParam)(f, AL_FILTER_ADD_UPDATE, update);
+        } else {
+            _freePVoice(drvr, voice->pvoice);
+        }
+
+        voice->pvoice = 0;
+
     }
-#endif
-
-    evt.vol.type = AL_SNDP_VOL_EVT;
-    evt.vol.state = &sState[sndp->target];
-    evt.vol.vol = vol;
-    alEvtqPostEvent(&sndp->evtq, (ALEvent *)&evt, 0);
 }
-

@@ -1,5 +1,5 @@
 /*====================================================================
- * sndpsetvol.c
+ * synallocfx.c
  *
  * Copyright 1995, Silicon Graphics, Inc.
  * All Rights Reserved.
@@ -18,25 +18,15 @@
  * Copyright Laws of the United States.
  *====================================================================*/
 
-#include "sndp.h"
-#include <os_internal.h>
-#include <ultraerror.h>
+#include "synthInternals.h"
 
-void alSndpSetVol(ALSndPlayer *sndp, s16 vol) 
+ALFxRef *alSynAllocFX(ALSynth *s, s16 bus, ALSynConfig *c, ALHeap *hp)
 {
-    ALSndpEvent evt;
-    ALSoundState  *sState = sndp->sndState;
+    alFxNew(&s->auxBus[bus].fx[0], c, hp);
+    alFxParam(&s->auxBus[bus].fx[0], AL_FILTER_SET_SOURCE,
+                  &s->auxBus[bus]);
+    alMainBusParam(s->mainBus, AL_FILTER_ADD_SOURCE,&s->auxBus[bus].fx[0]);
 
-#ifdef _DEBUG
-    if ((sndp->target >= sndp->maxSounds) || (sndp->target < 0)){
-        __osError(ERR_ALSNDPSETPAR, 2, sndp->target, sndp->maxSounds-1);
-	return;
-    }
-#endif
-
-    evt.vol.type = AL_SNDP_VOL_EVT;
-    evt.vol.state = &sState[sndp->target];
-    evt.vol.vol = vol;
-    alEvtqPostEvent(&sndp->evtq, (ALEvent *)&evt, 0);
+    return (ALFxRef)(&s->auxBus[bus].fx[0]);
 }
 

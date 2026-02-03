@@ -1,5 +1,5 @@
 /*====================================================================
- * sndpsetvol.c
+ * synaddplayer.c
  *
  * Copyright 1995, Silicon Graphics, Inc.
  * All Rights Reserved.
@@ -18,25 +18,17 @@
  * Copyright Laws of the United States.
  *====================================================================*/
 
-#include "sndp.h"
+#include "synthInternals.h"
 #include <os_internal.h>
-#include <ultraerror.h>
 
-void alSndpSetVol(ALSndPlayer *sndp, s16 vol) 
+void alSynAddPlayer(ALSynth *drvr, ALPlayer *client)
 {
-    ALSndpEvent evt;
-    ALSoundState  *sState = sndp->sndState;
+    OSIntMask mask = osSetIntMask(OS_IM_NONE);
 
-#ifdef _DEBUG
-    if ((sndp->target >= sndp->maxSounds) || (sndp->target < 0)){
-        __osError(ERR_ALSNDPSETPAR, 2, sndp->target, sndp->maxSounds-1);
-	return;
-    }
-#endif
+    client->samplesLeft = drvr->curSamples;
+    client->next = drvr->head;
+    drvr->head   = client;
 
-    evt.vol.type = AL_SNDP_VOL_EVT;
-    evt.vol.state = &sState[sndp->target];
-    evt.vol.vol = vol;
-    alEvtqPostEvent(&sndp->evtq, (ALEvent *)&evt, 0);
+    osSetIntMask(mask);
 }
 

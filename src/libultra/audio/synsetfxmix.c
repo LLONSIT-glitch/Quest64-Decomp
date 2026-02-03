@@ -1,5 +1,5 @@
 /*====================================================================
- * sndpsetvol.c
+ * synsetfxmix.c
  *
  * Copyright 1995, Silicon Graphics, Inc.
  * All Rights Reserved.
@@ -18,25 +18,43 @@
  * Copyright Laws of the United States.
  *====================================================================*/
 
-#include "sndp.h"
+#include "synthInternals.h"
 #include <os_internal.h>
 #include <ultraerror.h>
 
-void alSndpSetVol(ALSndPlayer *sndp, s16 vol) 
+void alSynSetFXMix(ALSynth *synth, ALVoice *v, u8 fxmix)
 {
-    ALSndpEvent evt;
-    ALSoundState  *sState = sndp->sndState;
+    ALParam  *update;
+    ALFilter *f;
 
-#ifdef _DEBUG
-    if ((sndp->target >= sndp->maxSounds) || (sndp->target < 0)){
-        __osError(ERR_ALSNDPSETPAR, 2, sndp->target, sndp->maxSounds-1);
-	return;
-    }
+    if (v->pvoice) {
+        /*
+         * get new update struct from the free list
+         */
+        update = __allocParam();
+        ALFailIf(update == 0, ERR_ALSYN_NO_UPDATE);
+
+        /*
+         * set offset and fxmix data
+         */
+        update->delta  = synth->paramSamples + v->pvoice->offset;
+        update->type   = AL_FILTER_SET_FXAMT;
+#if BUILD_VERSION >= VERSION_J
+        if (fxmix > 127) {
+            fxmix = 127;
+        }
+	    update->data.i = fxmix;
+#else
+        if (fxmix < 0) { // Not possible
+            update->data.i = -fxmix;
+        } else {
+            update->data.i = fxmix;
+        }
 #endif
+        update->next   = 0;
 
-    evt.vol.type = AL_SNDP_VOL_EVT;
-    evt.vol.state = &sState[sndp->target];
-    evt.vol.vol = vol;
-    alEvtqPostEvent(&sndp->evtq, (ALEvent *)&evt, 0);
+        f = v->pvoice->channelKnob;
+        (*f->setParam)(f, AL_FILTER_ADD_UPDATE, update);        
+    }
 }
 

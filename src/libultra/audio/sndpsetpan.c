@@ -1,5 +1,5 @@
 /*====================================================================
- * sndpsetvol.c
+ * sndpsetpan.c
  *
  * Copyright 1995, Silicon Graphics, Inc.
  * All Rights Reserved.
@@ -22,7 +22,7 @@
 #include <os_internal.h>
 #include <ultraerror.h>
 
-void alSndpSetVol(ALSndPlayer *sndp, s16 vol) 
+void alSndpSetPan(ALSndPlayer *sndp, ALPan pan) 
 {
     ALSndpEvent evt;
     ALSoundState  *sState = sndp->sndState;
@@ -34,9 +34,9 @@ void alSndpSetVol(ALSndPlayer *sndp, s16 vol)
     }
 #endif
 
-    evt.vol.type = AL_SNDP_VOL_EVT;
-    evt.vol.state = &sState[sndp->target];
-    evt.vol.vol = vol;
+    evt.pan.type = AL_SNDP_PAN_EVT;
+    evt.pan.pan  = pan;
+    evt.pan.state = &sState[sndp->target];
     alEvtqPostEvent(&sndp->evtq, (ALEvent *)&evt, 0);
 }
 
